@@ -5,7 +5,7 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::{io, time::Duration};
-use todui::{ui, App, InputMode};
+use todui::{input, ui, App, InputMode};
 
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
@@ -16,107 +16,10 @@ fn run_app<B: ratatui::backend::Backend>(
 
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
-                match app.input_mode {
-                    InputMode::Normal => match key.code {
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char('e') => {
-                            app.input_mode = InputMode::Editing;
-                            app.input.clear();
-                        }
-                        KeyCode::Char('j') | KeyCode::Down => app.move_selection(1),
-                        KeyCode::Char('k') | KeyCode::Up => app.move_selection(-1),
-                        KeyCode::Char(' ') => app.toggle_todo(),
-                        KeyCode::Char('d') => app.delete_todo(),
-                        KeyCode::Char('p') => app.toggle_priority(),
-                        KeyCode::Char('t') => {
-                            if app.selected_index.is_some() {
-                                app.input_mode = InputMode::AddingTags;
-                                if let Some(todo) = app.get_selected_todo() {
-                                    app.input = todo.tags.join(", ");
-                                }
-                            }
-                        }
-                        KeyCode::Char('n') => {
-                            if app.selected_index.is_some() {
-                                app.input_mode = InputMode::AddingNote;
-                                if let Some(todo) = app.get_selected_todo() {
-                                    app.input = todo.notes.clone();
-                                }
-                            }
-                        }
-                        KeyCode::Tab => app.cycle_filter(),
-                        KeyCode::Char('?') => {
-                            app.input_mode = if matches!(app.input_mode, InputMode::Help) {
-                                InputMode::Normal
-                            } else {
-                                InputMode::Help
-                            };
-                        }
-                        _ => {}
-                    },
-                    InputMode::Editing => match key.code {
-                        KeyCode::Enter => {
-                            let input = std::mem::take(&mut app.input);
-                            if !input.is_empty() {
-                                app.add_todo(input);
-                                app.input_mode = InputMode::Normal;
-                            }
-                        }
-                        KeyCode::Char(c) => {
-                            app.input.push(c);
-                        }
-                        KeyCode::Backspace => {
-                            app.input.pop();
-                        }
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
-                            app.input.clear();
-                        }
-                        _ => {}
-                    },
-                    InputMode::AddingTags => match key.code {
-                        KeyCode::Enter => {
-                            let tags = std::mem::take(&mut app.input);
-                            app.add_tags(tags);
-                            app.input_mode = InputMode::Normal;
-                        }
-                        KeyCode::Char(c) => {
-                            app.input.push(c);
-                        }
-                        KeyCode::Backspace => {
-                            app.input.pop();
-                        }
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
-                            app.input.clear();
-                        }
-                        _ => {}
-                    },
-                    InputMode::AddingNote => match key.code {
-                        KeyCode::Enter => {
-                            let note = std::mem::take(&mut app.input);
-                            app.add_note(note);
-                            app.input_mode = InputMode::Normal;
-                        }
-                        KeyCode::Char(c) => {
-                            app.input.push(c);
-                        }
-                        KeyCode::Backspace => {
-                            app.input.pop();
-                        }
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
-                            app.input.clear();
-                        }
-                        _ => {}
-                    },
-                    InputMode::Help => match key.code {
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
-                        }
-                        _ => {}
-                    },
+                if key.code == KeyCode::Char('q') && matches!(app.input_mode, InputMode::Normal) {
+                    return Ok(());
                 }
+                input::handle_input(&mut app, Event::Key(key));
             }
         }
 
