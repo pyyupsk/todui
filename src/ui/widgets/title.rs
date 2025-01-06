@@ -9,7 +9,7 @@ pub fn render_title(f: &mut Frame, area: ratatui::layout::Rect) {
     let title = Paragraph::new(vec![Line::from(vec![
         Span::styled("📝 ", Style::default().fg(Color::Yellow)),
         Span::styled(
-            "Todo Master",
+            "Todui",
             Style::default()
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD | Modifier::ITALIC),

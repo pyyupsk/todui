@@ -7,7 +7,7 @@ use ratatui::style::Color;
 #[derive(Clone)]
 pub enum InputMode {
     Normal,
-    Editing,
+    AddingTodo,
     AddingNote,
     AddingTags,
     Help,

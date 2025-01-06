@@ -1,11 +1,12 @@
 use crate::{App, InputMode};
 use crossterm::event::{Event, KeyCode};
+use std::mem;
 
 pub fn handle_input(app: &mut App, key: Event) {
     if let Event::Key(key) = key {
         match app.input_mode {
             InputMode::Normal => handle_normal_mode(app, key.code),
-            InputMode::Editing => handle_editing_mode(app, key.code),
+            InputMode::AddingTodo => handle_editing_mode(app, key.code),
             InputMode::AddingTags => handle_adding_tags_mode(app, key.code),
             InputMode::AddingNote => handle_adding_note_mode(app, key.code),
             InputMode::Help => handle_help_mode(app, key.code),
@@ -15,8 +16,8 @@ pub fn handle_input(app: &mut App, key: Event) {
 
 fn handle_normal_mode(app: &mut App, key: KeyCode) {
     match key {
-        KeyCode::Char('e') => {
-            app.input_mode = InputMode::Editing;
+        KeyCode::Char('a') => {
+            app.input_mode = InputMode::AddingTodo;
             app.input.clear();
         }
         KeyCode::Char('j') | KeyCode::Down => app.move_selection(1),
@@ -55,7 +56,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
 fn handle_editing_mode(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Enter => {
-            let input = std::mem::take(&mut app.input);
+            let input = mem::take(&mut app.input);
             if !input.is_empty() {
                 app.add_todo(input);
                 app.input_mode = InputMode::Normal;
@@ -78,7 +79,7 @@ fn handle_editing_mode(app: &mut App, key: KeyCode) {
 fn handle_adding_tags_mode(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Enter => {
-            let tags = std::mem::take(&mut app.input);
+            let tags = mem::take(&mut app.input);
             app.add_tags(tags);
             app.input_mode = InputMode::Normal;
         }
@@ -99,7 +100,7 @@ fn handle_adding_tags_mode(app: &mut App, key: KeyCode) {
 fn handle_adding_note_mode(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Enter => {
-            let note = std::mem::take(&mut app.input);
+            let note = mem::take(&mut app.input);
             app.add_note(note);
             app.input_mode = InputMode::Normal;
         }

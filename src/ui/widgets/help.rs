@@ -10,8 +10,8 @@ use ratatui::{
 pub fn render_help(f: &mut Frame, app: &App, layout: Rect) {
     // Help text
     let help_text = match app.input_mode {
-        InputMode::Normal => "[q]Quit [e]Edit [↑↓/jk]Navigate [Space]Toggle [d]Delete [p]Priority [t]Tags [n]Note [Tab]Filter [?]Help",
-        InputMode::Editing => "[Enter]Save [Esc]Cancel",
+        InputMode::Normal => "[q]Quit [a]Add [↑↓/jk]Navigate [Space]Toggle [d]Delete [p]Priority [t]Tags [n]Note [Tab]Filter [?]Help",
+        InputMode::AddingTodo => "[Enter]Save [Esc]Cancel",
         InputMode::AddingTags => "[Enter]Save tags [Esc]Cancel",
         InputMode::AddingNote => "[Enter]Save note [Esc]Cancel",
         InputMode::Help => "[Esc]Back to list",
@@ -28,7 +28,7 @@ pub fn render_help_popup(f: &mut Frame, area: Rect) {
         "Keyboard Shortcuts:",
         "─────────────────",
         "q      - Quit application",
-        "e      - Edit selected todo",
+        "a      - Add todo",
         "j/↓    - Move selection down",
         "k/↑    - Move selection up",
         "Space  - Toggle completion",

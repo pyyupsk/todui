@@ -17,8 +17,8 @@ pub fn render_input(
     };
 
     let input_title = match input_mode {
-        InputMode::Normal => " Input (Press 'e' to edit) ",
-        InputMode::Editing => " Adding Todo... ",
+        InputMode::Normal => " Input (Press 'a' to add) ",
+        InputMode::AddingTodo => " Adding Todo... ",
         InputMode::AddingTags => " Adding Tags... ",
         InputMode::AddingNote => " Adding Note... ",
         InputMode::Help => " Help Mode ",
