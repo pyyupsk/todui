@@ -5,14 +5,14 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::{io, time::Duration};
-use todui::{input, ui, App, InputMode};
+use todui::{core::input, ui, App, Error, InputMode};
 
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     mut app: App,
-) -> io::Result<()> {
+) -> Result<(), Error> {
     loop {
-        terminal.draw(|f| ui::ui::<B>(f, &app))?;
+        terminal.draw(|f| ui::render::<B>(f, &app))?;
 
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
@@ -23,25 +23,23 @@ fn run_app<B: ratatui::backend::Backend>(
             }
         }
 
-        if let Some(timeout) = app.message_timeout {
-            if timeout <= chrono::Local::now() {
-                app.message = None;
-                app.message_timeout = None;
-            }
-        }
+        app.update();
     }
 }
 
-fn main() -> io::Result<()> {
+fn setup_terminal() -> Result<(Terminal<CrosstermBackend<io::Stdout>>, App), Error> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-
+    let terminal = Terminal::new(backend)?;
     let app = App::new();
-    let res = run_app(&mut terminal, app);
 
+    Ok((terminal, app))
+}
+
+fn cleanup_terminal(mut terminal: Terminal<CrosstermBackend<io::Stdout>>) -> Result<(), Error> {
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -49,6 +47,12 @@ fn main() -> io::Result<()> {
         DisableMouseCapture
     )?;
     terminal.show_cursor()?;
+    Ok(())
+}
 
-    res
+fn main() -> Result<(), Error> {
+    let (mut terminal, app) = setup_terminal()?;
+    let result = run_app(&mut terminal, app);
+    cleanup_terminal(terminal)?;
+    result
 }

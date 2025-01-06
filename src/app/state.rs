@@ -1,7 +1,6 @@
-use crate::{
-    config::{load_todos, save_todos},
-    todo::{Priority, Todo},
-};
+use crate::core::{load_todos, save_todos};
+use crate::todo::Todo;
+use crate::Priority;
 use chrono::{DateTime, Local};
 use ratatui::style::Color;
 
@@ -200,5 +199,14 @@ impl App {
             Filter::HighPriority => Filter::All,
         };
         self.selected_index = None;
+    }
+
+    pub fn update(&mut self) {
+        if let Some(timeout) = self.message_timeout {
+            if timeout <= chrono::Local::now() {
+                self.message = None;
+                self.message_timeout = None;
+            }
+        }
     }
 }
