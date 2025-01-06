@@ -31,6 +31,12 @@ pub struct App {
     pub message_timeout: Option<DateTime<Local>>,
 }
 
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl App {
     pub fn new() -> App {
         App {

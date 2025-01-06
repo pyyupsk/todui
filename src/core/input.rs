@@ -118,10 +118,7 @@ fn handle_adding_note_mode(app: &mut App, key: KeyCode) {
 }
 
 fn handle_help_mode(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Esc => {
-            app.input_mode = InputMode::Normal;
-        }
-        _ => {}
+    if key == KeyCode::Esc {
+        app.input_mode = InputMode::Normal;
     }
 }
