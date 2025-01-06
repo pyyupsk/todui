@@ -6,7 +6,6 @@ use ratatui::{
 pub struct AppLayout {
     pub title: Rect,
     pub tabs: Rect,
-    pub help: Rect,
     pub content: Rect,
     pub status: Rect,
     pub input: Rect,
@@ -19,7 +18,6 @@ pub fn create_main_layout(f: &Frame) -> AppLayout {
         .constraints([
             Constraint::Length(3), // Title
             Constraint::Length(2), // Tabs
-            Constraint::Length(2), // Help
             Constraint::Min(3),    // Content
             Constraint::Length(3), // Status
             Constraint::Length(3), // Input
@@ -30,10 +28,9 @@ pub fn create_main_layout(f: &Frame) -> AppLayout {
     AppLayout {
         title: areas[0],
         tabs: areas[1],
-        help: areas[2],
-        content: areas[3],
-        status: areas[4],
-        input: areas[5],
-        message: areas[6],
+        content: areas[2],
+        status: areas[3],
+        input: areas[4],
+        message: areas[5],
     }
 }

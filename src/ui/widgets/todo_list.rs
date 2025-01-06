@@ -14,16 +14,16 @@ pub fn render_todo_list(f: &mut Frame, app: &App, layout: Rect) {
         .map(|todo| {
             let mut spans = vec![
                 if todo.completed {
-                    Span::styled("✓ ", Style::default().fg(Color::Green))
+                    Span::styled(" ✔ ", Style::default().fg(Color::Green))
                 } else {
-                    Span::styled("□ ", Style::default().fg(Color::Gray))
+                    Span::styled("   ", Style::default().fg(Color::Gray))
                 },
                 match todo.priority {
                     crate::todo::Priority::High => {
-                        Span::styled("⚡", Style::default().fg(Color::Red))
+                        Span::styled("●", Style::default().fg(Color::Red))
                     }
                     crate::todo::Priority::Medium => {
-                        Span::styled("●", Style::default().fg(Color::Yellow))
+                        Span::styled("○", Style::default().fg(Color::Yellow))
                     }
                     crate::todo::Priority::Low => {
                         Span::styled("○", Style::default().fg(Color::Green))
@@ -55,7 +55,7 @@ pub fn render_todo_list(f: &mut Frame, app: &App, layout: Rect) {
             }
 
             if !todo.notes.is_empty() {
-                spans.push(Span::styled(" 📝", Style::default().fg(Color::Yellow)));
+                spans.push(Span::styled(" ", Style::default().fg(Color::Yellow)));
             }
 
             spans.push(Span::styled(
@@ -77,14 +77,11 @@ pub fn render_todo_list(f: &mut Frame, app: &App, layout: Rect) {
                 .add_modifier(Modifier::BOLD),
         ));
 
-    let todos = List::new(todos)
-        .block(todos_block)
-        .highlight_style(
-            Style::default()
-                .bg(Color::DarkGray)
-                .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol("➤ ");
+    let todos = List::new(todos).block(todos_block).highlight_style(
+        Style::default()
+            .bg(Color::DarkGray)
+            .add_modifier(Modifier::BOLD),
+    );
 
     f.render_stateful_widget(
         todos,

@@ -7,7 +7,7 @@ mod title;
 mod todo_list;
 
 pub use filter_tabs::render_filter_tabs;
-pub use help::{render_help, render_help_popup};
+pub use help::render_help_popup;
 pub use input::render_input;
 pub use message::render_message;
 pub use status::render_status;

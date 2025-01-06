@@ -17,10 +17,10 @@ pub fn render_input(
     };
 
     let input_title = match input_mode {
-        InputMode::Normal => " Input (Press 'a' to add) ",
-        InputMode::AddingTodo => " Adding Todo... ",
-        InputMode::AddingTags => " Adding Tags... ",
-        InputMode::AddingNote => " Adding Note... ",
+        InputMode::Normal => " Press 'a' to add a new todo ",
+        InputMode::AddingTodo => " Enter a todo description... ",
+        InputMode::AddingTags => " Enter a comma-separated list of tags... (Ex: work, personal) ",
+        InputMode::AddingNote => " Enter a note... ",
         InputMode::Help => " Help Mode ",
     };
 
