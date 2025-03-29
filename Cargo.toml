@@ -1,7 +1,12 @@
 [package]
 name = "todui"
 version = "0.1.0"
+authors = ["P. Thipayanate <pyyupsk@proton.me>"]
 edition = "2021"
+description = "A terminal-based todo list manager written in Rust"
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/pyyupsk/todui"
 
 [dependencies]
 chrono = { version = "0.4.39", features = ["serde"] }

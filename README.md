@@ -25,7 +25,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Clone the repository and build the project using Cargo:
 
 ```sh
-git clone https://github.com/yourusername/todui.git
+git clone https://github.com/pyyupsk/todui.git
 cd todui
 cargo install --path .
 ```
