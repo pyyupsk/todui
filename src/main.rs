@@ -51,6 +51,12 @@ fn cleanup_terminal(mut terminal: Terminal<CrosstermBackend<io::Stdout>>) -> Res
 }
 
 fn main() -> Result<(), Error> {
+    let args: Vec<String> = std::env::args().collect();
+    if args.contains(&"--version".to_string()) {
+        println!("{}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
+
     let (mut terminal, app) = setup_terminal()?;
     let result = run_app(&mut terminal, app);
     cleanup_terminal(terminal)?;
