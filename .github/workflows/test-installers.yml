@@ -1,0 +1,154 @@
+name: Test Installation Scripts
+
+on:
+  push:
+    branches: main
+    paths:
+      - "install.sh"
+      - "install.ps1"
+      - ".github/workflows/test-installers.yml"
+  pull_request:
+    branches: main
+    paths:
+      - "install.sh"
+      - "install.ps1"
+      - ".github/workflows/test-installers.yml"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to test (leave empty for latest)"
+        required: false
+        default: ""
+
+jobs:
+  test-bash-installer:
+    name: Test Bash Installer
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            platform: linux-x86_64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            platform: linux-aarch64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            platform: macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            platform: macos-aarch64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Make install.sh executable
+        run: chmod +x install.sh
+
+      - name: Test installation with default parameters
+        run: |
+          ./install.sh
+          # Verify installation
+          if ! command -v todui --version &> /dev/null; then
+            echo "todui command not found in PATH"
+            exit 1
+          fi
+          echo "todui installed successfully with default parameters"
+
+      - name: Test custom installation directory
+        run: |
+          CUSTOM_DIR="$HOME/custom-dir"
+          ./install.sh -d "$CUSTOM_DIR"
+          # Verify installation
+          if [ ! -x "$CUSTOM_DIR/todui" ]; then
+            echo "todui not found in custom directory"
+            exit 1
+          fi
+          echo "todui installed successfully to custom directory"
+
+      - name: Test installation with specific version
+        if: ${{ github.event.inputs.version != '' }}
+        run: |
+          ./install.sh -v ${{ github.event.inputs.version }}
+          # Verify installation
+          if ! command -v todui --version &> /dev/null; then
+            echo "todui command not found in PATH"
+            exit 1
+          fi
+          VERSION_OUTPUT=$(todui --version)
+          if [[ "$VERSION_OUTPUT" != *"${{ github.event.inputs.version }}"* ]]; then
+            echo "Incorrect version installed: $VERSION_OUTPUT"
+            exit 1
+          fi
+          echo "todui version ${{ github.event.inputs.version }} installed successfully"
+
+  test-powershell-installer:
+    name: Test PowerShell Installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Test installation with default parameters
+        shell: pwsh
+        run: |
+          ./install.ps1
+          # Verify installation
+          $installPath = "$env:ProgramFiles\todui\todui.exe"
+          if (-not (Test-Path $installPath)) {
+            Write-Error "todui.exe not found at $installPath"
+            exit 1
+          }
+          Write-Host "todui installed successfully with default parameters"
+
+      - name: Test custom installation directory
+        shell: pwsh
+        run: |
+          $customDir = "C:\todui-custom"
+          ./install.ps1 -InstallDir $customDir
+          # Verify installation
+          if (-not (Test-Path "$customDir\todui.exe")) {
+            Write-Error "todui.exe not found in custom directory"
+            exit 1
+          }
+          Write-Host "todui installed successfully to custom directory"
+
+      - name: Test installation with specific version
+        if: ${{ github.event.inputs.version != '' }}
+        shell: pwsh
+        run: |
+          ./install.ps1 -Version "${{ github.event.inputs.version }}"
+          # Verify installation
+          $installPath = "$env:ProgramFiles\todui\todui.exe"
+          if (-not (Test-Path $installPath)) {
+            Write-Error "todui.exe not found at $installPath"
+            exit 1
+          }
+          $versionOutput = & "$installPath" --version
+          if (-not $versionOutput -or -not $versionOutput.Contains("${{ github.event.inputs.version }}")) {
+            Write-Error "Incorrect version installed: $versionOutput"
+            exit 1
+          }
+          Write-Host "todui version ${{ github.event.inputs.version }} installed successfully"
+
+  matrix-summary:
+    name: Test Summary
+    needs: [test-bash-installer, test-powershell-installer]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [[ "${{ needs.test-bash-installer.result }}" == "success" && "${{ needs.test-powershell-installer.result }}" == "success" ]]; then
+            echo "✅ All installation tests passed!"
+          else
+            echo "❌ Some installation tests failed!"
+            [[ "${{ needs.test-bash-installer.result }}" != "success" ]] && echo "- Bash installer failed"
+            [[ "${{ needs.test-powershell-installer.result }}" != "success" ]] && echo "- PowerShell installer failed"
+            exit 1
+          fi
