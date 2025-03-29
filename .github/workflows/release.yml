@@ -53,6 +53,7 @@ jobs:
   build-and-upload:
     needs: create-release
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -71,6 +72,14 @@ jobs:
             target: aarch64-apple-darwin
             artifact_name: todui-macos-aarch64.tar.gz
             platform: macos-aarch64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: todui-windows-x86_64.zip
+            platform: windows-x86_64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            artifact_name: todui-windows-aarch64.zip
+            platform: windows-aarch64
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -81,13 +90,11 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Set up cross-compilation
-        if: contains(matrix.target, 'aarch64')
+      - name: Install Cross-Compilation Dependencies (Linux aarch64)
+        if: matrix.os == 'ubuntu-latest' && contains(matrix.target, 'aarch64')
         run: |
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            sudo apt-get update
-            sudo apt-get install -y gcc-aarch64-linux-gnu
-          fi
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
 
       - name: Build binary
         uses: actions-rs/cargo@v1
@@ -96,13 +103,14 @@ jobs:
           args: --release --target ${{ matrix.target }}
           use-cross: ${{ contains(matrix.target, 'aarch64-unknown-linux-gnu') }}
 
-      - name: Package binary
+      - name: Package binary (Unix)
+        if: runner.os != 'Windows'
         run: |
           mkdir -p dist/todui
           BIN_PATH="target/${{ matrix.target }}/release/todui"
           cp $BIN_PATH dist/todui/
-          cp LICENSE dist/todui/
-          cp README.md dist/todui/
+          cp LICENSE dist/todui/ || echo "LICENSE file not found"
+          cp README.md dist/todui/ || echo "README.md file not found"
           if [ -d "completions" ]; then
             cp -r completions dist/todui/
           fi
@@ -113,6 +121,23 @@ jobs:
           tar -czvf ${{ matrix.artifact_name }} todui
           cd ..
 
+      - name: Package binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir -p dist\todui
+          $BIN_PATH = "target\${{ matrix.target }}\release\todui.exe"
+          Copy-Item $BIN_PATH -Destination dist\todui\
+          Copy-Item LICENSE -Destination dist\todui\ -ErrorAction SilentlyContinue
+          Copy-Item README.md -Destination dist\todui\ -ErrorAction SilentlyContinue
+          if (Test-Path "completions") {
+            Copy-Item -Path completions -Destination dist\todui\ -Recurse
+          }
+          if (Test-Path "man") {
+            Copy-Item -Path man -Destination dist\todui\ -Recurse
+          }
+          Compress-Archive -Path dist\todui\* -DestinationPath dist\${{ matrix.artifact_name }}
+
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
@@ -120,6 +145,12 @@ jobs:
           tag_name: v${{ needs.create-release.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-version:
+    needs: [create-release, build-and-upload]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Update version in Cargo.toml
         run: |
@@ -132,5 +163,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add Cargo.toml
-          git commit -m "Update installation files for v${{ needs.create-release.outputs.version }}" || echo "No changes to commit"
-          git push
+          git commit -m "Update version to v${{ needs.create-release.outputs.version }}" || echo "No changes to commit"
+          git push origin HEAD:main || git push origin HEAD:master
